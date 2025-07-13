@@ -43,7 +43,7 @@ export const useAuthStore = create((set,get)=>({
         set({authUser: res.data})
          toast.success("Account created successfully")
          get().connectSocket()
-         const usersRes = await api.get("/message/users"); // Update users after signup
+         const usersRes = await api.get("/message/users");
       set({ users: usersRes.data });
          return res.data;
        } catch (error) {
@@ -116,6 +116,7 @@ connectSocket:()=>{
    const socket = io(BASE_URL,{
     query:{
       userId: authUser._id,
+      fullName: authUser.fullName,
     }
    })
    socket.connect()

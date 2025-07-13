@@ -127,6 +127,20 @@ export const useChatStore = create((set, get) => ({
       }));
     });
 
+    socket.on("remote-audio-muted", ({ toUserId, isMuted }) => {
+  const receiverSocketId = userSocketMap[toUserId];
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("remote-audio-muted", { fromUserId: userId, isMuted });
+  }
+});
+
+socket.on("remote-video-muted", ({ toUserId, isMuted }) => {
+  const receiverSocketId = userSocketMap[toUserId];
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("remote-video-muted", { fromUserId: userId, isMuted });
+  }
+});
+
     socket.on("call-user", ({ fromUserId, callType }) => {
       console.log("Received call-user from:", fromUserId, "type:", callType);
       set({ callStatus: "incoming", callType, incomingCall: { fromUserId, callType }, callPartnerId: fromUserId });
@@ -415,6 +429,9 @@ export const useChatStore = create((set, get) => ({
       localStream.getTracks().forEach((track) => track.stop());
     }
     if (peerConnection) {
+      peerConnection.ontrack = null; // Remove event listener
+    peerConnection.onicecandidate = null; // Remove event listener
+    peerConnection.oniceconnectionstatechange = null;
       peerConnection.close();
     }
     if (selectedUser && socket) {
@@ -437,63 +454,64 @@ export const useChatStore = create((set, get) => ({
     toast.success("Call ended", { id: "call-ended", duration: 3000 });
   },
 
-  toggleMuteAudio: () => {
-    const { localStream, isAudioMuted, callPartnerId, peerConnection } = get();
-    const socket = useAuthStore.getState().socket;
+ 
+toggleMuteAudio: () => {
+  const { localStream, isAudioMuted, callPartnerId, peerConnection } = get();
+  const socket = useAuthStore.getState().socket;
 
-    if (!localStream || !peerConnection) return;
+  if (!localStream || !peerConnection) return;
 
-    const newMuted = !isAudioMuted;
+  const newMuted = !isAudioMuted;
 
-    // Toggle local audio tracks
-    localStream.getAudioTracks().forEach((track) => {
-      track.enabled = !newMuted;
+  // Toggle local audio tracks
+  localStream.getAudioTracks().forEach((track) => {
+    track.enabled = !newMuted;
+  });
+
+  // Update local state
+  set({ isAudioMuted: newMuted });
+
+  // Emit mute state to other peer
+  if (socket && callPartnerId) {
+    socket.emit("remote-audio-muted", {
+      toUserId: callPartnerId,
+      isMuted: newMuted,
     });
+    console.log("Emitted audio mute update to:", callPartnerId, "isMuted:", newMuted);
+  }
 
-    // Update local state
-    set({ isAudioMuted: newMuted });
+  // Renegotiate connection
+  renegotiateConnection(peerConnection, localStream);
+},
 
-    // Emit mute state to other peer
-    if (socket && callPartnerId) {
-      socket.emit("remote-audio-muted", {
-        toUserId: callPartnerId,
-        isMuted: newMuted,
-      });
-      console.log("Emitted audio mute update to:", callPartnerId, "isMuted:", newMuted);
-    }
+toggleMuteVideo: () => {
+  const { localStream, isVideoMuted, callPartnerId, peerConnection } = get();
+  const socket = useAuthStore.getState().socket;
 
-    // Optional: Renegotiate to ensure peer receives updated stream
-    renegotiateConnection(peerConnection, localStream);
-  },
+  if (!localStream || !peerConnection) return;
 
-  toggleMuteVideo: () => {
-    const { localStream, isVideoMuted, callPartnerId, peerConnection } = get();
-    const socket = useAuthStore.getState().socket;
+  const newMuted = !isVideoMuted;
 
-    if (!localStream || !peerConnection) return;
+  // Toggle local video tracks
+  localStream.getVideoTracks().forEach((track) => {
+    track.enabled = !newMuted;
+  });
 
-    const newMuted = !isVideoMuted;
+  // Update local state
+  set({ isVideoMuted: newMuted });
 
-    // Toggle local video tracks
-    localStream.getVideoTracks().forEach((track) => {
-      track.enabled = !newMuted;
+  // Emit mute state to other peer
+  if (socket && callPartnerId) {
+    socket.emit("remote-video-muted", {
+      toUserId: callPartnerId,
+      isMuted: newMuted,
     });
+    console.log("Emitted video mute update to:", callPartnerId, "isMuted:", newMuted);
+  }
 
-    // Update local state
-    set({ isVideoMuted: newMuted });
-
-    // Emit mute state to other peer
-    if (socket && callPartnerId) {
-      socket.emit("remote-video-muted", {
-        toUserId: callPartnerId,
-        isMuted: newMuted,
-      });
-      console.log("Emitted video mute update to:", callPartnerId, "isMuted:", newMuted);
-    }
-
-    // Optional: Renegotiate to ensure peer receives updated stream
-    renegotiateConnection(peerConnection, localStream);
-  },
+  // Renegotiate connection
+  renegotiateConnection(peerConnection, localStream);
+},
 }));
 
 
