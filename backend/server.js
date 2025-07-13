@@ -28,7 +28,7 @@ app.use('/api/auth',authRoutes)
 app.use('/api/message',messageRoutes)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const clientPath = path.join(__dirname, './frontend/dist');
+const clientPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(clientPath));
 
 app.get("*", (req, res) => {
