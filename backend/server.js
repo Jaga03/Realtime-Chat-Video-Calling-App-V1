@@ -31,7 +31,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(clientPath));
 
-app.get("*", (req, res) => {
+app.get("/*splat", (req, res) => {
   const indexFile = path.join(clientPath, "index.html");
   if (fs.existsSync(indexFile)) {
     res.sendFile(indexFile);
