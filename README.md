@@ -80,7 +80,7 @@ ChatzUp is a modern, full-stack real-time chat and video calling application bui
 
 1. Visit [https://dashboard.render.com/](https://dashboard.render.com/)
 2. Click **New Web Service**
-3. Connect your GitHub repository: [jagathishkumar/chatzup](https://github.com/jagathishkumar/chatzup)
+3. Connect your GitHub repository: [jagathishkumar/chatzup](https://github.com/Jaga03/Realtime-Chat-Video-Calling-App-V1)
 4. Set **Root Directory** to `/`
 5. Configure the following build and start commands:
 
