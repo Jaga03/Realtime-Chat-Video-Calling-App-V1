@@ -19,56 +19,59 @@ export const useAuthStore = create((set,get)=>({
     users:[],
     socket:null,
 
-    checkAuth:async()=>{
-        try {
-            const res = await api.get("/auth/check");
+    checkAuth: async () => {
+    set({ isCheckingAuth: true });
+    try {
+      const [authRes, usersRes] = await Promise.all([
+        api.get("/auth/check"),
+        api.get("/message/users"),
+      ]);
+      set({ authUser: authRes.data, users: usersRes.data });
+      get().connectSocket();
+    } catch (error) {
+      console.log("Error in CheckAuth", error);
+      localStorage.removeItem("token");
+      set({ authUser: null, users: [] });
+    } finally {
+      set({ isCheckingAuth: false });
+    }
+  },
 
-            set({authUser:res.data})
-             get().connectSocket()
-
-        } catch (error) {
-            console.log("Error in CheckAuth",error)
-            set({authUser:null})
-        }
-        finally{
-            set({isCheckingAuth:false})
-        }
-    },
-
-
-    signUp:async(data)=>{
-        set({isSigningUp: true})
-       try {
-        const res = await api.post("/auth/signup",data)
-        set({authUser: res.data})
-         toast.success("Account created successfully")
-         get().connectSocket()
-         const usersRes = await api.get("/message/users");
+  signUp: async (data) => {
+    set({ isSigningUp: true });
+    try {
+      const res = await api.post("/auth/signup", data);
+      set({ authUser: res.data });
+      toast.success("Account created successfully");
+      get().connectSocket();
+      const usersRes = await api.get("/message/users"); // Update users after signup
       set({ users: usersRes.data });
-         return res.data;
-       } catch (error) {
-         toast.error(error?.response?.data?.message || "Signup failed");
-         throw error; 
-       }
-       finally{
-        set({isSigningUp:false})
-       }
-    },
+      return res.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Signup failed");
+      throw error;
+    } finally {
+      set({ isSigningUp: false });
+    }
+  },
 
-    
-    login: async(data)=>{
-      set({isLoginingIn:true})
-      try {
-        const res = await api.post('/auth/login',data);
-        set({authUser:res.data})
-        toast.success("Logged in successfully")
-         get().connectSocket()
-      } catch (error) {
-        toast.error(error.response.data.message)
-      }finally{
-        set({isLoginingIn:false})
-      }
-    },
+  login: async (data) => {
+    set({ isLoginingIn: true });
+    try {
+      const res = await api.post("/auth/login", data);
+      const token = res.headers["authorization"]?.split(" ")[1] || res.data.token; // Adjust based on API response
+      if (token) localStorage.setItem("token", token);
+      set({ authUser: res.data });
+      toast.success("Logged in successfully");
+      get().connectSocket();
+      const usersRes = await api.get("/message/users"); 
+      set({ users: usersRes.data });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
+    } finally {
+      set({ isLoginingIn: false });
+    }
+  },
      
    logout:async()=>{
     try {
