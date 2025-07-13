@@ -1,0 +1,60 @@
+
+@import "tailwindcss";
+@plugin "daisyui"{
+    themes: light --default ,
+      dark,
+      cupcake,
+      bumblebee,
+      emerald,
+      corporate,
+      synthwave,
+      retro,
+      cyberpunk,
+      valentine,
+      halloween,
+      garden,
+      forest,
+      aqua,
+      lofi,
+      pastel,
+      fantasy,
+      wireframe,
+      black,
+      luxury,
+      dracula,
+      cmyk,
+      autumn,
+      business,
+      acid,
+      lemonade,
+      night,
+      coffee,
+      winter,
+      dim,
+      nord,
+      sunset 
+}
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 9999px;
+  animation: typing 1.2s infinite ease-in-out;
+  margin: 0 2px;
+  display: inline-block;
+}
+
+
+
