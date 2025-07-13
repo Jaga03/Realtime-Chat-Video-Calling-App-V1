@@ -28,13 +28,11 @@ app.use('/api/message',messageRoutes)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(clientPath));
 
-if(process.env.NODE_ENV === "production"){
-    app.use(express.static(clientPath));
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));
 });
-}
 
 
 
