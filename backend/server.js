@@ -8,6 +8,7 @@ import { connectDB } from './lib/db.js'
 import {app,server} from './lib/socket.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from "fs";
 
 
 dotenv.config()
@@ -30,8 +31,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(clientPath));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientPath, 'index.html'));
+app.get("*", (req, res) => {
+  const indexFile = path.join(clientPath, "index.html");
+  if (fs.existsSync(indexFile)) {
+    res.sendFile(indexFile);
+  } else {
+    res.status(500).send("Frontend build not found.");
+  }
 });
 
 
